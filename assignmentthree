@@ -32,7 +32,7 @@ In [3]:
 import pandas as pd
 import re
 def answer_one():
-    energy=pd.read_excel('/Users/biniam/coursera-panda/Indicators.xls')
+    energy=pd.read_excel('Indicators.xls')
     energy = energy[16:243]
     energy=energy.drop(['Unnamed: 0','Unnamed: 1'],1)
     energy.columns=['Country', 'Energy Supply', 'Energy Supply per Capita', '% Renewable']
@@ -51,12 +51,12 @@ def answer_one():
     energy['Country']=energy['Country'].str.strip()
     
     #GDP
-    GDP=pd.read_csv('/Users/biniam/coursera-panda/world_bank.csv',skiprows=4)
+    GDP=pd.read_csv('world_bank.csv',skiprows=4)
     GDP.rename(columns={"Country Name":"Country"},inplace=True)
     GDP.Country.replace({"Korea, Rep.": "South Korea", "Iran, Islamic Rep.": "Iran","Hong Kong SAR, China": "Hong Kong"},inplace=True)
     GDP['Country']=GDP['Country'].str.strip()
     #ScimEn
-    ScimEn=pd.read_excel('/Users/biniam/coursera-panda/scimagojr-3.xlsx')
+    ScimEn=pd.read_excel('scimagojr-3.xlsx')
     #ScimEn=ScimEn.sort_values(by='Rank',ascending=True).head(15)
     ScimEn['Country']=ScimEn['Country'].str.strip()
     
