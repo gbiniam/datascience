@@ -1,5 +1,4 @@
 
-Assignment-three
 You are currently looking at version 1.5 of this notebook. To download notebooks and datafiles, as well as get help on Jupyter notebooks in the Coursera platform, visit the Jupyter Notebook FAQ course resource.
 Assignment 3 - More Pandas
 This assignment requires more individual learning then the last one did - you are encouraged to check out the pandas documentation to find functions or methods you might not have used yet, or ask questions on Stack Overflow and tag them as pandas and python related. And of course, the discussion forums are open for interaction with your peers and the course staff.
@@ -28,16 +27,20 @@ Finally, load the Sciamgo Journal and Country Rank data for Energy Engineering a
 Join the three datasets: GDP, Energy, and ScimEn into a new dataset (using the intersection of country names). Use only the last 10 years (2006-2015) of GDP data and only the top 15 countries by Scimagojr 'Rank' (Rank 1 through 15).
 The index of this DataFrame should be the name of the country, and the columns should be ['Rank', 'Documents', 'Citable documents', 'Citations', 'Self-citations', 'Citations per document', 'H index', 'Energy Supply', 'Energy Supply per Capita', '% Renewable', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015'].
 This function should return a DataFrame with 20 columns and 15 entries.
-In [3]:
+In [2]:
 import pandas as pd
 import re
-def answer_one():
+#energy=None
+#GDP=None
+#ScimEn=None
+def energy():
     energy=pd.read_excel('Indicators.xls')
     energy = energy[16:243]
     energy=energy.drop(['Unnamed: 0','Unnamed: 1'],1)
     energy.columns=['Country', 'Energy Supply', 'Energy Supply per Capita', '% Renewable']
     energy['Energy Supply']=pd.to_numeric(energy['Energy Supply'], errors='coerce')
-    energy['Energy Supply'].apply(lambda x: x*1000000)
+    energy['Energy Supply']=energy['Energy Supply'].apply(lambda x: x*1000000)
+    #energy['Energy Supply'].apply(lambda x: x*1000000)
     
     def editCountryName(input):
     
@@ -49,26 +52,29 @@ def answer_one():
     energy['Country']=energy['Country'].apply(editCountryName)
     energy.Country.replace({'Republic of Korea': 'South Korea','United States of America': 'United States','United Kingdom of Great Britain and Northern Ireland': 'United Kingdom',"China, Hong Kong Special Administrative Region": "Hong Kong"},inplace=True)
     energy['Country']=energy['Country'].str.strip()
-    
-    #GDP
+    return energy
+def GDP():
     GDP=pd.read_csv('world_bank.csv',skiprows=4)
     GDP.rename(columns={"Country Name":"Country"},inplace=True)
     GDP.Country.replace({"Korea, Rep.": "South Korea", "Iran, Islamic Rep.": "Iran","Hong Kong SAR, China": "Hong Kong"},inplace=True)
     GDP['Country']=GDP['Country'].str.strip()
-    #ScimEn
+    return GDP
+def scimen():
     ScimEn=pd.read_excel('scimagojr-3.xlsx')
     #ScimEn=ScimEn.sort_values(by='Rank',ascending=True).head(15)
     ScimEn['Country']=ScimEn['Country'].str.strip()
-    
-    #result=pd.merge(pd.merge(GDP, on='Country'),on='Country')
-    #temp=pd.merge(energy,GDP, on='Country')
-    result=pd.merge(pd.merge(energy,GDP, on='Country'),ScimEn, on='Country')
+    return ScimEn
+      
+def answer_one():
+    en=energy()
+    gdp=GDP()
+    scim=scimen()
+    result=pd.merge(pd.merge(en,gdp, on='Country'),scim, on='Country')
     result.set_index('Country',inplace=True)
     result=result.sort_values(by='Rank',ascending=True).head(15)
     finalresult=result[['Rank', 'Documents', 'Citable documents', 'Citations', 'Self-citations', 'Citations per document', 'H index', 'Energy Supply', 'Energy Supply per Capita', '% Renewable', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015']]  
     return finalresult
     
----------------------------------------------------------------------------
 Question 2 (6.6%)
 The previous question joined three datasets then reduced this to just the top 15 entries. When you joined the datasets, but before you reduced this to the top 15 items, how many entries did you lose?
 This function should return a single number.
@@ -81,11 +87,14 @@ In [1]:
   <line x1="150" y1="125" x2="300" y2="150" stroke="black" stroke-width="2" fill="black" stroke-dasharray="5,3"/>
   <text  x="300" y="165" font-family="Verdana" font-size="35">Everything but this!</text>
 </svg>
-Everything but this!
+
 In [ ]:
 def answer_two():
-    before=pd.merge(pd.merge(energy,GDP, on='Country', how='outer'),ScimEn, on='Country',how='outer')
-    after=pd.merge(pd.merge(energy,GDP, on='Country'),ScimEn, on='Country')
+    energy2=energy()
+    gdp2=GDP()
+    scimen2=scimen()
+    before=pd.merge(pd.merge(energy2,gdp2, on='Country', how='outer'),scimen2, on='Country',how='outer')
+    after=pd.merge(pd.merge(energy2,gdp2, on='Country'),scimen2, on='Country')
     diff=len(before)-len(after)
     return diff
 
@@ -107,7 +116,7 @@ In [ ]:
 def answer_four():
     Top15 = answer_one()
     avgsixdf = Top15
-    avgsixdf['averageGDP']=avgGDP
+    avgsixdf['averageGDP']=answer_three()
     avgsixdf.sort_values(by='averageGDP',inplace=True,ascending=False)
     avgsix=abs(avgsixdf.iloc[5]['2015']-avgsixdf.iloc[5]['2006'])
     return avgsix
@@ -118,7 +127,7 @@ In [ ]:
 def answer_five():
     Top15 = answer_one()
     energyPerCapita=Top15['Energy Supply per Capita'].mean()
-    return energyPerCapita
+    return float(energyPerCapita)
 Question 6 (6.6%)
 What country has the maximum % Renewable and what is the percentage?
 This function should return a tuple with the name of the country and the percentage.
@@ -161,14 +170,14 @@ def answer_nine():
     answernine=Top15['Energy Supply per Capita'].astype(float).corr(Top15['citabledocpercapita'].astype(float))
     return answernine
 In [ ]:
-def plot9():
-    import matplotlib as plt
-    %matplotlib inline
+#def plot9():
+    #import matplotlib as plt
+    #%matplotlib inline
     
-    Top15 = answer_one()
-    Top15['PopEst'] = Top15['Energy Supply'] / Top15['Energy Supply per Capita']
-    Top15['Citable docs per Capita'] = Top15['Citable documents'] / Top15['PopEst']
-    Top15.plot(x='Citable docs per Capita', y='Energy Supply per Capita', kind='scatter', xlim=[0, 0.0006])
+    #Top15 = answer_one()
+    #Top15['PopEst'] = Top15['Energy Supply'] / Top15['Energy Supply per Capita']
+    #Top15['Citable docs per Capita'] = Top15['Citable documents'] / Top15['PopEst']
+    #Top15.plot(x='Citable docs per Capita', y='Energy Supply per Capita', kind='scatter', xlim=[0, 0.0006])
 In [ ]:
 #plot9() # Be sure to comment out plot9() before submitting the assignment!
 Question 10 (6.6%)
@@ -258,23 +267,23 @@ def answer_thirteen():
     Top15['population']=pd.to_numeric(Top15['population'])
     answerthirteen=Top15['population'].apply(lambda x: '{0:,}'.format(x))
     return answerthirteen
-Optional¶
+Optional
 Use the built in function plot_optional() to see an example visualization.
 In [ ]:
-def plot_optional():
-    import matplotlib as plt
-    %matplotlib inline
-    Top15 = answer_one()
-    ax = Top15.plot(x='Rank', y='% Renewable', kind='scatter', 
-                    c=['#e41a1c','#377eb8','#e41a1c','#4daf4a','#4daf4a','#377eb8','#4daf4a','#e41a1c',
-                       '#4daf4a','#e41a1c','#4daf4a','#4daf4a','#e41a1c','#dede00','#ff7f00'], 
-                    xticks=range(1,16), s=6*Top15['2014']/10**10, alpha=.75, figsize=[16,6]);
+#def plot_optional():
+    #import matplotlib as plt
+    #%matplotlib inline
+    #Top15 = answer_one()
+    #ax = Top15.plot(x='Rank', y='% Renewable', kind='scatter', 
+                    #c=['#e41a1c','#377eb8','#e41a1c','#4daf4a','#4daf4a','#377eb8','#4daf4a','#e41a1c',
+                       #'#4daf4a','#e41a1c','#4daf4a','#4daf4a','#e41a1c','#dede00','#ff7f00'], 
+                    #xticks=range(1,16), s=6*Top15['2014']/10**10, alpha=.75, figsize=[16,6]);
 
-    for i, txt in enumerate(Top15.index):
-        ax.annotate(txt, [Top15['Rank'][i], Top15['% Renewable'][i]], ha='center')
+    #for i, txt in enumerate(Top15.index):
+        #ax.annotate(txt, [Top15['Rank'][i], Top15['% Renewable'][i]], ha='center')
 
-    print("This is an example of a visualization that can be created to help understand the data. \
-This is a bubble chart showing % Renewable vs. Rank. The size of the bubble corresponds to the countries' \
-2014 GDP, and the color corresponds to the continent.")
+    #print("This is an example of a visualization that can be created to help understand the data. \
+#This is a bubble chart showing % Renewable vs. Rank. The size of the bubble corresponds to the countries' \
+#2014 GDP, and the color corresponds to the continent.")
 In [ ]:
 #plot_optional() # Be sure to comment out plot_optional() before submitting the assignment!
